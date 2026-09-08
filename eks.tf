@@ -10,7 +10,8 @@ resource "aws_eks_cluster" "langfuse" {
   vpc_config {
     subnet_ids              = local.private_subnets
     endpoint_private_access = true
-    endpoint_public_access  = true
+    endpoint_public_access  = var.eks_endpoint_public_access
+    public_access_cidrs     = var.eks_public_access_cidrs
     security_group_ids      = [aws_security_group.eks.id]
   }
 
@@ -183,5 +184,5 @@ resource "aws_iam_role_policy_attachment" "eks_service_policy" {
 
 resource "aws_cloudwatch_log_group" "eks" {
   name              = "/aws/eks/${var.name}/cluster"
-  retention_in_days = 30
-} 
+  retention_in_days = var.eks_log_retention_in_days
+}

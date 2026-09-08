@@ -30,6 +30,11 @@ output "load_balancer_dns_name" {
   value       = data.aws_lb.ingress.dns_name
 }
 
+output "load_balancer_arn_suffix" {
+  description = "ALB ARN suffix for CloudWatch metric dimensions"
+  value       = data.aws_lb.ingress.arn_suffix
+}
+
 output "load_balancer_zone_id" {
   description = "Hosted zone ID of the ALB (for use in Route53 alias records)"
   value       = data.aws_lb.ingress.zone_id

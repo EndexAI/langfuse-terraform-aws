@@ -59,6 +59,8 @@ resource "aws_rds_cluster" "postgres" {
   preferred_maintenance_window = "mon:04:00-mon:05:00"
 
   db_cluster_parameter_group_name = var.postgres_cluster_parameter_group_name
+  deletion_protection             = var.postgres_deletion_protection
+  enabled_cloudwatch_logs_exports = var.postgres_enabled_cloudwatch_logs_exports
 
   serverlessv2_scaling_configuration {
     min_capacity = var.postgres_min_capacity
