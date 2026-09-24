@@ -50,9 +50,12 @@ output "public_subnet_ids" {
   value       = local.public_subnets
 }
 
+# Consumers that replicate this bucket need versioning enabled first, and
+# ordering through this output keeps them from needing a module-wide depends_on.
 output "bucket_name" {
   description = "Name of the S3 bucket for Langfuse"
   value       = aws_s3_bucket.langfuse.bucket
+  depends_on  = [aws_s3_bucket_versioning.langfuse]
 }
 
 output "bucket_id" {
