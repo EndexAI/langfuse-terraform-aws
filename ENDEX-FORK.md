@@ -18,6 +18,7 @@ Additional optional inputs:
 | `alb_ssl_policy` | `null` | Listener policy annotation; null leaves it absent |
 | `eks_endpoint_public_access` | `true` | Public Kubernetes API endpoint |
 | `eks_public_access_cidrs` | `["0.0.0.0/0"]` | Public API source restrictions |
+| `postgres_ingress_security_group_ids` | `null` | PostgreSQL sources: the EKS cluster SG plus these; null keeps the VPC CIDR rule |
 
 `load_balancer_arn_suffix` exposes the existing ALB for CloudWatch dimensions.
 The module still owns the ALB through the Kubernetes controller, not a second
@@ -27,7 +28,11 @@ caller-owned; do not duplicate ownership of module resources.
 Changing parameter groups can require database restarts. Establish TLS clients
 before enforcing `rds.force_ssl`; preload and install pgAudit before setting
 `pgaudit.log`. Establish private Terraform connectivity before disabling the
-public EKS endpoint. These inputs do not orchestrate those operational steps.
+public EKS endpoint. Confirm from flow logs that every PostgreSQL client carries
+the cluster security group or a listed one before setting
+`postgres_ingress_security_group_ids`; the switch revokes the CIDR rule and
+authorizes the groups in one in-place update. These inputs do not orchestrate
+those operational steps.
 
 Return to an official immutable upstream revision only after all inputs are
 available there and a refreshed plan confirms no deletion/replacement, resource
