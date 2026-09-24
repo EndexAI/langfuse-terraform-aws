@@ -39,3 +39,9 @@ variable "eks_public_access_cidrs" {
   type        = list(string)
   default     = ["0.0.0.0/0"]
 }
+
+variable "postgres_ingress_security_group_ids" {
+  description = "Security groups allowed to reach PostgreSQL alongside the EKS cluster security group that the Fargate pods carry. null keeps the VPC CIDR rule; any list, even empty, replaces it."
+  type        = list(string)
+  default     = null
+}

@@ -3,11 +3,34 @@ resource "aws_security_group" "postgres" {
   description = "Security group for Langfuse PostgreSQL"
   vpc_id      = local.vpc_id
 
-  ingress {
-    from_port   = 5432
-    to_port     = 5432
-    protocol    = "tcp"
-    cidr_blocks = [local.vpc_cidr_block]
+  dynamic "ingress" {
+    for_each = var.postgres_ingress_security_group_ids == null ? [local.vpc_cidr_block] : []
+
+    content {
+      from_port   = 5432
+      to_port     = 5432
+      protocol    = "tcp"
+      cidr_blocks = [ingress.value]
+    }
+  }
+
+  # Fargate pods carry only the EKS-managed cluster security group, not
+  # aws_security_group.eks, so that is the group Langfuse itself connects from.
+  dynamic "ingress" {
+    for_each = var.postgres_ingress_security_group_ids == null ? [] : [
+      concat(
+        [aws_eks_cluster.langfuse.vpc_config[0].cluster_security_group_id],
+        var.postgres_ingress_security_group_ids,
+      )
+    ]
+
+    content {
+      description     = "PostgreSQL from Langfuse pods and approved security groups"
+      from_port       = 5432
+      to_port         = 5432
+      protocol        = "tcp"
+      security_groups = ingress.value
+    }
   }
 
   egress {
