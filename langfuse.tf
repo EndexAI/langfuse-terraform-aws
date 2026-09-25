@@ -1,6 +1,8 @@
 locals {
   inbound_cidrs_csv = join(",", var.ingress_inbound_cidrs)
-  langfuse_values   = <<EOT
+  # join over the splat stays valid when the group is not created.
+  alb_frontend_security_group_ids_csv = join(",", aws_security_group.alb[*].id)
+  langfuse_values                     = <<EOT
 langfuse:
   image:
     tag: ${jsonencode(var.app_version)}
@@ -174,7 +176,12 @@ langfuse:
       alb.ingress.kubernetes.io/scheme: ${var.alb_scheme}
       alb.ingress.kubernetes.io/target-type: 'ip'
       alb.ingress.kubernetes.io/ssl-redirect: '443'
+%{if var.alb_ingress_security_group_ids == null~}
       alb.ingress.kubernetes.io/inbound-cidrs: ${local.inbound_cidrs_csv}
+%{else~}
+      alb.ingress.kubernetes.io/security-groups: ${local.alb_frontend_security_group_ids_csv}
+      alb.ingress.kubernetes.io/manage-backend-security-group-rules: "true"
+%{endif~}
       alb.ingress.kubernetes.io/certificate-arn: ${local.certificate_arn}
 %{if var.alb_ssl_policy != null~}
       alb.ingress.kubernetes.io/ssl-policy: ${jsonencode(var.alb_ssl_policy)}
@@ -285,7 +292,12 @@ resource "helm_release" "langfuse" {
     local.clickhouse_overwrite_values,
   ])
 
+  # Switching eks_api_ingress_security_group_ids revokes the VPC CIDR rule and
+  # authorizes the per-group rules in the same apply, in no fixed order. Waiting
+  # for the new rules keeps a private-endpoint runner from losing the API
+  # between the two while this release upgrades.
   depends_on = [
+    aws_security_group_rule.eks_api,
     kubernetes_namespace.langfuse,
     aws_iam_role.langfuse_irsa,
     aws_iam_role_policy.langfuse_s3_access,

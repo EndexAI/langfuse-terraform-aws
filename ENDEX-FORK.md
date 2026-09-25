@@ -19,6 +19,10 @@ Additional optional inputs:
 | `eks_endpoint_public_access` | `true` | Public Kubernetes API endpoint |
 | `eks_public_access_cidrs` | `["0.0.0.0/0"]` | Public API source restrictions |
 | `postgres_ingress_security_group_ids` | `null` | PostgreSQL sources: the EKS cluster SG plus these; null keeps the VPC CIDR rule |
+| `redis_ingress_security_group_ids` | `null` | Redis sources: the EKS cluster SG plus these; null keeps the VPC CIDR rule |
+| `efs_ingress_security_group_ids` | `null` | EFS sources: the EKS cluster SG plus these; null keeps the VPC CIDR rule |
+| `eks_api_ingress_security_group_ids` | `null` | Kubernetes API (443) sources on the additional cluster SG; null keeps the VPC CIDR all-TCP rule |
+| `alb_ingress_security_group_ids` | `null` | ALB (80/443) sources through a module-owned frontend SG; null keeps `inbound-cidrs` |
 
 `load_balancer_arn_suffix` exposes the existing ALB for CloudWatch dimensions.
 The module still owns the ALB through the Kubernetes controller, not a second
