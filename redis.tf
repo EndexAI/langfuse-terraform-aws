@@ -3,11 +3,32 @@ resource "aws_security_group" "redis" {
   description = "Security group for Langfuse Redis"
   vpc_id      = local.vpc_id
 
-  ingress {
-    from_port   = 6379
-    to_port     = 6379
-    protocol    = "tcp"
-    cidr_blocks = [local.vpc_cidr_block]
+  dynamic "ingress" {
+    for_each = var.redis_ingress_security_group_ids == null ? [local.vpc_cidr_block] : []
+
+    content {
+      from_port   = 6379
+      to_port     = 6379
+      protocol    = "tcp"
+      cidr_blocks = [ingress.value]
+    }
+  }
+
+  dynamic "ingress" {
+    for_each = var.redis_ingress_security_group_ids == null ? [] : [
+      concat(
+        [aws_eks_cluster.langfuse.vpc_config[0].cluster_security_group_id],
+        var.redis_ingress_security_group_ids,
+      )
+    ]
+
+    content {
+      description     = "Redis from Langfuse pods and approved security groups"
+      from_port       = 6379
+      to_port         = 6379
+      protocol        = "tcp"
+      security_groups = ingress.value
+    }
   }
 
   egress {

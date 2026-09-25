@@ -335,3 +335,33 @@ resource "helm_release" "aws_load_balancer_controller" {
     aws_eks_addon.coredns,
   ]
 }
+
+# The controller only accepts CIDRs through inbound-cidrs, so scoping the ALB
+# by source security group means handing it a group it does not own. Egress
+# to the targets comes from the controller's shared backend security group,
+# which manage-backend-security-group-rules keeps attached.
+resource "aws_security_group" "alb" {
+  count = var.alb_ingress_security_group_ids == null ? 0 : 1
+
+  name        = "${var.name}-alb"
+  description = "Langfuse ALB frontend: 80 and 443 from approved security groups"
+  vpc_id      = local.vpc_id
+
+  tags = {
+    Name = "${local.tag_name} ALB"
+  }
+}
+
+resource "aws_vpc_security_group_ingress_rule" "alb" {
+  for_each = var.alb_ingress_security_group_ids == null ? {} : {
+    for pair in setproduct([80, 443], var.alb_ingress_security_group_ids) :
+    "${pair[0]}-${pair[1]}" => { port = pair[0], source = pair[1] }
+  }
+
+  security_group_id            = aws_security_group.alb[0].id
+  description                  = "Langfuse ALB :${each.value.port} from ${each.value.source}"
+  ip_protocol                  = "tcp"
+  from_port                    = each.value.port
+  to_port                      = each.value.port
+  referenced_security_group_id = each.value.source
+}

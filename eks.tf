@@ -143,12 +143,31 @@ resource "aws_security_group_rule" "eks_egress" {
 }
 
 resource "aws_security_group_rule" "eks_vpc" {
+  count = var.eks_api_ingress_security_group_ids == null ? 1 : 0
+
   type              = "ingress"
   from_port         = 0
   to_port           = 65535
   protocol          = "tcp"
   cidr_blocks       = [local.vpc_cidr_block]
   security_group_id = aws_security_group.eks.id
+}
+
+moved {
+  from = aws_security_group_rule.eks_vpc
+  to   = aws_security_group_rule.eks_vpc[0]
+}
+
+resource "aws_security_group_rule" "eks_api" {
+  for_each = toset(coalesce(var.eks_api_ingress_security_group_ids, []))
+
+  type                     = "ingress"
+  description              = "Kubernetes API from ${each.value}"
+  from_port                = 443
+  to_port                  = 443
+  protocol                 = "tcp"
+  source_security_group_id = each.value
+  security_group_id        = aws_security_group.eks.id
 }
 
 resource "aws_iam_role" "eks" {
