@@ -215,6 +215,41 @@ variable "langfuse_worker_replicas" {
   }
 }
 
+variable "clickhouse_image_tag" {
+  description = "Optional image tag for both ClickHouse server and Keeper. Null preserves the Helm chart defaults."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.clickhouse_image_tag == null ? true : length(trimspace(var.clickhouse_image_tag)) > 0
+    error_message = "clickhouse_image_tag must be non-empty when supplied."
+  }
+}
+
+variable "efs_throughput_mode" {
+  description = "EFS throughput mode for ClickHouse and Keeper storage."
+  type        = string
+  default     = "elastic"
+
+  validation {
+    condition     = contains(["elastic", "bursting", "provisioned"], var.efs_throughput_mode)
+    error_message = "efs_throughput_mode must be elastic, bursting, or provisioned."
+  }
+}
+
+variable "efs_provisioned_throughput_in_mibps" {
+  description = "Required positive throughput in MiB/s when EFS uses provisioned mode; null otherwise."
+  type        = number
+  default     = null
+
+  validation {
+    condition = var.efs_throughput_mode == "provisioned" ? (
+      var.efs_provisioned_throughput_in_mibps == null ? false : var.efs_provisioned_throughput_in_mibps > 0
+    ) : var.efs_provisioned_throughput_in_mibps == null
+    error_message = "Set positive efs_provisioned_throughput_in_mibps only when efs_throughput_mode is provisioned."
+  }
+}
+
 variable "clickhouse_replicas" {
   description = "Number of ClickHouse replicas (single shard). The default of 3 provides a highly available setup. Only used when ClickHouse is deployed in-cluster."
   type        = number

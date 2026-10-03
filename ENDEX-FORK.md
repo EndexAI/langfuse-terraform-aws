@@ -11,6 +11,9 @@ Additional optional inputs:
 
 | Input | Default | Purpose |
 | --- | --- | --- |
+| `clickhouse_image_tag` | `null` | Override server and Keeper image tags together; null preserves chart defaults |
+| `efs_throughput_mode` | `"elastic"` | ClickHouse/Keeper filesystem throughput mode |
+| `efs_provisioned_throughput_in_mibps` | `null` | Required positive MiB/s only in provisioned mode |
 | `eks_log_retention_in_days` | `30` | Control-plane log retention |
 | `redis_log_retention_in_days` | `7` | Redis log retention |
 | `postgres_deletion_protection` | `false` | Aurora deletion protection |

@@ -77,6 +77,10 @@ clickhouse:
     existingSecret: langfuse
     existingSecretKey: clickhouse-password
   cluster:
+%{if var.clickhouse_image_tag != null~}
+    image:
+      tag: ${jsonencode(var.clickhouse_image_tag)}
+%{endif~}
     replicas: ${var.clickhouse_replicas}
     storage:
       size: ${var.clickhouse_storage_size}
@@ -89,6 +93,10 @@ clickhouse:
         cpu: "${var.clickhouse_cpu}"
         memory: "${var.clickhouse_memory}"
   keeper:
+%{if var.clickhouse_image_tag != null~}
+    image:
+      tag: ${jsonencode(var.clickhouse_image_tag)}
+%{endif~}
     replicas: ${var.clickhouse_keeper_replicas}
     storage:
       size: ${var.clickhouse_keeper_storage_size}
