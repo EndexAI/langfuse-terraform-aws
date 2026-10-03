@@ -6,9 +6,10 @@
 resource "aws_efs_file_system" "langfuse" {
   count = local.deploy_clickhouse ? 1 : 0
 
-  creation_token  = "${var.name}-efs"
-  encrypted       = true
-  throughput_mode = "elastic"
+  creation_token                  = "${var.name}-efs"
+  encrypted                       = true
+  throughput_mode                 = var.efs_throughput_mode
+  provisioned_throughput_in_mibps = var.efs_provisioned_throughput_in_mibps
 
   tags = {
     Name = local.tag_name
